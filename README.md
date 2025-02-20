@@ -27,8 +27,6 @@ We will use the **MNIST as JPG** dataset from Kaggle. Follow these steps:
    │   ├── 9/  (Images of digit 9)
    ```
 
----
-
 ### **Step 2: Create and Activate a Virtual Environment**
 
 It is recommended to use a virtual environment for dependency management.
@@ -46,8 +44,6 @@ source deep_learning_demo/bin/activate
 python -m venv deep_learning_demo
 deep_learning_demo\Scripts\activate
 ```
-
----
 
 ### **Step 3: Install Dependencies**
 
@@ -75,8 +71,6 @@ tensorboard --logdir=logs --port=6007
 
 Once TensorBoard is running, open your browser and go to:\
 [http://127.0.0.1:6007/](http://127.0.0.1:6007/)
-
----
 
 ### **Train the Model**
 
@@ -109,3 +103,4 @@ This will:\
 🔹 ...
 
 ---
+
