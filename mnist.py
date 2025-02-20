@@ -7,13 +7,12 @@ import torch.nn.functional as F
 import torch.nn as nn
 from pytorch_lightning import Trainer
 from pytorch_lightning.loggers import TensorBoardLogger
-
-# tensorboard --logdir=logs --port=6007
+from pathlib import Path  
 
 class MNISTDataModule(pl.LightningDataModule):
     def __init__(self, data_dir: str, batch_size: int = 64):
         super().__init__()
-        self.data_dir = data_dir
+        self.data_dir = Path(data_dir)  # Convert to Path object
         self.batch_size = batch_size
         self.transform = transforms.Compose(
             [
@@ -23,7 +22,7 @@ class MNISTDataModule(pl.LightningDataModule):
         )
 
     def setup(self, stage=None):
-        dataset = ImageFolder(root=self.data_dir, transform=self.transform)
+        dataset = ImageFolder(root=str(self.data_dir), transform=self.transform)
         train_size = int(0.8 * len(dataset))
         val_size = int(0.1 * len(dataset))
         test_size = len(dataset) - train_size - val_size
@@ -32,9 +31,8 @@ class MNISTDataModule(pl.LightningDataModule):
             dataset, [train_size, val_size, test_size]
         )
         print("Loaded images from disk.")
-        print("Number of train,val,test images: ", train_size, val_size, test_size)
+        print(f"Number of train, val, test images: {train_size}, {val_size}, {test_size}")
         print("────────────────────────────────────────────────────────────────────────────")
-
 
     def train_dataloader(self):
         return DataLoader(self.train_dataset, batch_size=self.batch_size, num_workers=7)
@@ -104,16 +102,19 @@ class MNISTModel(pl.LightningModule):
 
     def configure_optimizers(self):
         return torch.optim.SGD(self.parameters(), lr=self.lr)
-        #return torch.optim.Adam(self.parameters(), lr=self.lr)
+        # return torch.optim.Adam(self.parameters(), lr=self.lr)
 
 
 if __name__ == "__main__":
-    data_module = MNISTDataModule(data_dir="./images/")
+    data_dir = Path("./images")  # Ensure platform-independent path
+    log_dir = Path("logs")
+
+    data_module = MNISTDataModule(data_dir=data_dir)
     model = MNISTModel()
 
     print("────────────────────────────────────────────────────────────────────────────")
-    trainer = Trainer(max_epochs=100, logger=TensorBoardLogger("logs/"))
+    trainer = Trainer(max_epochs=100, logger=TensorBoardLogger(str(log_dir)))
     print("────────────────────────────────────────────────────────────────────────────")
     trainer.fit(model=model, datamodule=data_module)
     print("────────────────────────────────────────────────────────────────────────────")
-    trainer.test(datamodule=data_module, ckpt_path='best')
+    trainer.test(datamodule=data_module, ckpt_path="best")
