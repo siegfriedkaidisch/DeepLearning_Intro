@@ -10,9 +10,9 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from pathlib import Path  
 
 class MNISTDataModule(pl.LightningDataModule):
-    def __init__(self, data_dir: str, batch_size: int = 64):
+    def __init__(self, data_dir: Path, batch_size: int = 64):
         super().__init__()
-        self.data_dir = Path(data_dir)  # Convert to Path object
+        self.data_dir = data_dir
         self.batch_size = batch_size
         self.transform = transforms.Compose(
             [
@@ -22,7 +22,7 @@ class MNISTDataModule(pl.LightningDataModule):
         )
 
     def setup(self, stage=None):
-        dataset = ImageFolder(root=str(self.data_dir), transform=self.transform)
+        dataset = ImageFolder(root=self.data_dir, transform=self.transform)
         train_size = int(0.8 * len(dataset))
         val_size = int(0.1 * len(dataset))
         test_size = len(dataset) - train_size - val_size
@@ -106,14 +106,14 @@ class MNISTModel(pl.LightningModule):
 
 
 if __name__ == "__main__":
-    data_dir = Path("./images")  # Ensure platform-independent path
-    log_dir = Path("logs")
+    data_dir = Path("./images") 
+    log_dir = Path("./logs")
 
     data_module = MNISTDataModule(data_dir=data_dir)
     model = MNISTModel()
 
     print("────────────────────────────────────────────────────────────────────────────")
-    trainer = Trainer(max_epochs=100, logger=TensorBoardLogger(str(log_dir)))
+    trainer = Trainer(max_epochs=10, logger=TensorBoardLogger(log_dir))
     print("────────────────────────────────────────────────────────────────────────────")
     trainer.fit(model=model, datamodule=data_module)
     print("────────────────────────────────────────────────────────────────────────────")
