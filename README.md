@@ -99,7 +99,7 @@ This will:\
 
 🔹 Experiment with different network architectures\
 🔹 Try different optimizers (SGD, Adam, etc.)\
-🔹 Try different activation functions (ReLU, Sigmoid)
+🔹 Try different activation functions (ReLU, Sigmoid)\
 🔹 ...
 
 ---
