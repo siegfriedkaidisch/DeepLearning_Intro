@@ -15,10 +15,8 @@ class MNISTDataModule(pl.LightningDataModule):
         self.data_dir = data_dir
         self.batch_size = batch_size
         self.transform = transforms.Compose(
-            [
-                transforms.Grayscale(num_output_channels=1),
-                transforms.ToTensor(),
-            ]
+            [transforms.Grayscale(num_output_channels=1),
+                transforms.ToTensor()]
         )
 
     def setup(self, stage=None):
@@ -55,6 +53,7 @@ class MNISTModel(pl.LightningModule):
         self.hl2 = nn.Linear(128, 64)
         self.act2 = nn.ReLU()
         self.output_layer = nn.Linear(64, 10)
+        # -> probabilities -> ANN prediction
 
     def forward(self, x):
         x = self.flatten(x)
@@ -62,15 +61,15 @@ class MNISTModel(pl.LightningModule):
         x = self.act1(x)
         x = self.hl2(x)
         x = self.act2(x)
-        x = self.output_layer(x)
-        return x
+        yhat = self.output_layer(x)
+        return yhat
 
     def training_step(self, batch):
         x, y = batch
-        ann_output = self(x)
-        loss = F.cross_entropy(ann_output, y)
+        yhat = self(x) # calls forward
+        loss = F.cross_entropy(yhat, y)
 
-        preds = torch.argmax(ann_output, dim=1)
+        preds = torch.argmax(yhat, dim=1)
         acc = (preds == y).float().mean()
 
         self.log("train_loss", loss, prog_bar=True, logger=True)
@@ -80,21 +79,23 @@ class MNISTModel(pl.LightningModule):
 
     def validation_step(self, batch):
         x, y = batch
-        ann_output = self(x)
-        loss = F.cross_entropy(ann_output, y)
+        yhat = self(x)
+        loss = F.cross_entropy(yhat, y)
 
-        preds = torch.argmax(ann_output, dim=1)
+        preds = torch.argmax(yhat, dim=1)
         acc = (preds == y).float().mean()
 
         self.log("val_loss", loss, prog_bar=True, logger=True)
         self.log("val_acc", acc, prog_bar=True, logger=True)
 
+        # loss not returned!
+
     def test_step(self, batch):
         x, y = batch
-        ann_output = self(x)
-        loss = F.cross_entropy(ann_output, y)
+        yhat = self(x)
+        loss = F.cross_entropy(yhat, y)
 
-        preds = torch.argmax(ann_output, dim=1)
+        preds = torch.argmax(yhat, dim=1)
         acc = (preds == y).float().mean()
 
         self.log("test_loss", loss, prog_bar=True, logger=True)
@@ -102,19 +103,20 @@ class MNISTModel(pl.LightningModule):
 
     def configure_optimizers(self):
         return torch.optim.SGD(self.parameters(), lr=self.lr)
-        # return torch.optim.Adam(self.parameters(), lr=self.lr)
+        #return torch.optim.Adam(self.parameters(), lr=self.lr)
+        #return torch.optim.RMSprop(self.parameters(), lr=self.lr)
 
 
 if __name__ == "__main__":
     data_dir = Path("./images") 
     log_dir = Path("./logs")
 
-    data_module = MNISTDataModule(data_dir=data_dir)
+    data_module = MNISTDataModule(data_dir=data_dir, batch_size=64) # 512
     model = MNISTModel()
 
     print("────────────────────────────────────────────────────────────────────────────")
     trainer = Trainer(max_epochs=10, logger=TensorBoardLogger(log_dir))
     print("────────────────────────────────────────────────────────────────────────────")
     trainer.fit(model=model, datamodule=data_module)
-    print("────────────────────────────────────────────────────────────────────────────")
-    trainer.test(datamodule=data_module, ckpt_path="best")
+    #print("────────────────────────────────────────────────────────────────────────────")
+    #trainer.test(datamodule=data_module, ckpt_path="best")
